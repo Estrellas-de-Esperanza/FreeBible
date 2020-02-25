@@ -1,0 +1,115 @@
+\documentclass{memoir}
+
+\usepackage{xparse}
+\usepackage{microtype}
+\usepackage{lettrine}
+\usepackage{eso-pic}
+\usepackage{multicol}
+
+% set up ordinary footnotes
+\makeatletter
+\def\footnoterule{\kern-3\p@
+  \hrule \@width \textwidth \kern 2.6\p@}
+\makeatother
+\renewcommand\thefootnote{\textit{\arabic{footnote}}}
+
+% code to create chapters, verses, and cross references
+\ExplSyntaxOn
+
+\int_new:N \crossref_int
+\int_new:N \vs_int
+\tl_new:N \crossref_tl
+
+% insert a cross reference
+\NewDocumentCommand {\crossref} {m}
+  {
+    \int_compare:nNnT { \crossref_int } > { 25 }
+      {
+        \int_set:Nn \crossref_int { 0 }
+      }
+    \int_incr:N \crossref_int
+    \textsuperscript{ \emph { \int_to_alph:n { \crossref_int } } }
+    \tl_if_empty:NF \crossref_tl
+      {
+        \tl_gput_right:Nn \crossref_tl { ~ }
+      }
+    \tl_gput_right:Nx \crossref_tl
+      {
+        \exp_not:N \textsuperscript
+          {
+            \exp_not:N \emph { \int_to_alph:n { \crossref_int } }
+          }
+        \, #1
+      }
+  }
+
+% insert chapter marker
+\NewDocumentCommand {\ch} {m}
+  {
+    \int_gset:Nn \vs_int {1}
+    \lettrine [findent=0.5em,nindent=0em] { #1 } {}
+  }
+
+% output cross references from previous verse and insert verse marker
+\NewDocumentCommand {\vs} {m}
+  {
+    \tl_if_empty:NF \crossref_tl
+      {
+        \sidebar
+          {
+            \textbf { \int_use:N \vs_int } \, \tl_use:N \crossref_tl
+          }
+      }
+    \int_gset:Nn \vs_int { #1 }
+    \tl_gclear:N \crossref_tl
+    \textsuperscript { #1 \, }
+  }
+
+% output any remaining cross references
+\AtEndDocument
+  {
+    \tl_if_empty:NF \crossref_tl
+      {
+        \sidebar
+          {
+            \textbf { \int_use:N \vs_int } \, \tl_use:N \crossref_tl
+          }
+      }
+  }
+
+\ExplSyntaxOff
+
+% set up centre column location and size
+\setlength\columnsep{2.5cm}
+\setlength{\sidebarhsep}{\dimexpr -0.5\textwidth - 0.5\columnsep + 2mm}
+\setlength{\sidebarwidth}{\dimexpr \columnsep - 4mm}
+\renewcommand{\sidebarfont}{\footnotesize\normalfont}
+\renewcommand*{\sidebarform}{\raggedright\hangindent 1mm}
+\setlength{\sidebarvsep}{0ex}
+\setsidebarheight{\dimexpr \textheight - 1ex}
+
+% add vertical lines
+\AddToShipoutPictureBG{%
+  \AtTextUpperLeft{%
+      \hskip \dimexpr 0.5\textwidth - 0.5\columnsep + 1mm
+      \vrule depth \dimexpr \textheight - \ht\strutbox - 1pt
+      \hskip \dimexpr\columnsep - 2mm
+      \vrule depth \dimexpr \textheight - \ht\strutbox - 1pt}}
+
+\begin{document}
+
+\begin{multicols}{2}
+  \ch{1}\crossref{Gen.\ 1:1; [Col.\ 1:17; 1 John 1:1; Rev. 1:4, 8, 17; 3:14;
+  21:6; 22:13]}In the beginning was \crossref{Rev.\ 19:13; [Heb.\ 4:12; 1 John
+  1:1]}the Word, and \crossref{1 John 1:2; [ch.\ 17:5]}the Word was with God,
+  and \crossref{Phil.\ 2:6}the Word was God. \vs{2}He was in the beginning
+  with God. \vs{3}\crossref{ver.\ 10; Ps.\ 33:6; 1 Cor.\ 8:6; Col.\ 1:16;
+  Heb.\ 1:2}All things were made through him, and without him was not any
+  thing made that was made. \vs{4}\crossref{ch.\ 5:26; 11:25; 1 John 1:2;
+  5:11}In him was life,\footnote{Or \emph{was not any thing made. That which
+  has been made was life in him}} and \crossref{ch.\ 8:12; 9:5; 12:46}the life
+  was the light of men.  \vs{5}\crossref{[ch.\ 3:19]}The light shines in the
+  darkness, and the darkness has not overcome it.
+\end{multicols}
+
+\end{document}
